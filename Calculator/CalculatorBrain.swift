@@ -11,10 +11,18 @@ import Foundation
 class CalculatorBrain {
     
     private var accumulator = 0.0
+    private var stringAccumulator = ""
+    private var partialResultFlag = false
     
     func setOperand(operand: Double) {
         accumulator = operand
+        
+        if isPartialResult == false {
+            stringAccumulator = String(operand)
+        }
     }
+    
+    
     
     private var operations: Dictionary<String,Operation> = [
         "π": Operation.Constant(M_PI), // M_PI,
@@ -26,7 +34,8 @@ class CalculatorBrain {
         "×": Operation.BinaryOperation({ $0 * $1 }),
         "−": Operation.BinaryOperation({ $0 - $1 }),
         "+": Operation.BinaryOperation({ $0 + $1 }),
-        "=": Operation.Equals
+        "=": Operation.Equals,
+        "C": Operation.Cleanup
     ]
     
     private enum Operation {
@@ -34,31 +43,52 @@ class CalculatorBrain {
         case UnaryOperation((Double) -> (Double))
         case BinaryOperation((Double, Double) -> (Double))
         case Equals
+        case Cleanup
     }
-    
     
     func performOperation(symbol: String) {
         if let operation = operations[symbol] {
             switch operation {
             case .Constant(let value):
                 accumulator = value
+                stringAccumulator += symbol
             case .UnaryOperation(let function):
+                executeInStringUnaryOperation(symbol: symbol)
                 accumulator = function(accumulator)
+                
             case .BinaryOperation(let function):
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryOperation: function, firstOperand: accumulator)
+                stringAccumulator += " \(symbol) "
+                partialResultFlag = true
             case .Equals:
                 executePendingBinaryOperation()
-                
+            case .Cleanup:
+                accumulator = 0
+                stringAccumulator = ""
+                partialResultFlag = false
+                pending = nil
             }
+        }
+    }
+    
+    private func executeInStringUnaryOperation(symbol: String) {
+        if pending != nil {
+            stringAccumulator += symbol + "(\(accumulator))"
+        } else {
+            stringAccumulator = symbol + "(\(stringAccumulator))"
         }
     }
     
     private func executePendingBinaryOperation() {
         if pending != nil {
+            if stringAccumulator.characters.last == " " {
+                stringAccumulator += "\(accumulator)"
+            }
             accumulator = pending!.binaryOperation(pending!.firstOperand, accumulator)
         }
         pending = nil
+        partialResultFlag = false
     }
     
     private var pending: PendingBinaryOperationInfo?
@@ -73,4 +103,18 @@ class CalculatorBrain {
             return accumulator
         }
     }
+    
+    var description: String {
+        get {
+            return stringAccumulator
+        }
+    }
+    
+    var isPartialResult: Bool {
+        get {
+            return partialResultFlag
+        }
+    }
+    
+    
 }

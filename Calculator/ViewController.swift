@@ -12,16 +12,33 @@ class ViewController: UIViewController {
     
     //MARK: Properties
     @IBOutlet private weak var display: UILabel!
-    private var userIsInTheMiddleOfTyping = false
+    @IBOutlet weak var historyLabel: UILabel!
     
+    private var userIsInTheMiddleOfTyping = false
     
     private var displayValue: Double {
         get {
             return Double(display.text!)!
-            
         }
         set {
             display.text = String(newValue)
+        }
+    }
+    
+    private var descriptionValue: String {
+        get {
+            return self.descriptionValue
+        }
+        set {
+            if brain.description != "" {
+                if brain.isPartialResult {
+                    historyLabel.text = String(newValue) + " … "
+                } else {
+                    historyLabel.text = String(newValue) + " = "
+                }
+            } else {
+                historyLabel.text = ""
+            }
         }
     }
     
@@ -39,14 +56,23 @@ class ViewController: UIViewController {
                 display!.text = textCurrentlyDisplay + digit
             }
         } else {
-            if digit == "." {
-                display!.text = "0."
-            } else {
-                display!.text = digit
-            }
+
+                if digit == "." {
+                    display!.text = "0."
+                } else {
+                    display!.text = digit
+                }
+
         }
         
+//        if userIsInTheMiddleOfTyping == false {
+//
+//                descriptionValue = brain.description
+//
+//        }
+        
         userIsInTheMiddleOfTyping = true
+        
     }
     
     @IBAction private func performOperation(_ sender: UIButton) {
@@ -59,6 +85,7 @@ class ViewController: UIViewController {
             brain.performOperation(symbol: mathSymbol)
         }
         displayValue = brain.result
+        descriptionValue = brain.description
     }
     
 }
