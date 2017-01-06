@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     @IBOutlet private weak var display: UILabel!
     private var userIsInTheMiddleOfTyping = false
     
+    
     private var displayValue: Double {
         get {
             return Double(display.text!)!
@@ -29,12 +30,22 @@ class ViewController: UIViewController {
     //MARK: Actions
     @IBAction private func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
+        
         if userIsInTheMiddleOfTyping {
             let textCurrentlyDisplay = display!.text!
-            display!.text = textCurrentlyDisplay + digit
+            if textCurrentlyDisplay.range(of: ".") == nil {
+                display!.text = textCurrentlyDisplay + digit
+            } else if digit != "." {
+                display!.text = textCurrentlyDisplay + digit
+            }
         } else {
-            display!.text = digit
+            if digit == "." {
+                display!.text = "0."
+            } else {
+                display!.text = digit
+            }
         }
+        
         userIsInTheMiddleOfTyping = true
     }
     
